@@ -5,29 +5,28 @@ import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/database";
 import { Calendar, TrendingUp, Loader2, Trash2 } from "lucide-react";
 
-// Local type for Sale to avoid TS errors if database types are not updated yet
-type Sale = any;
+import useSWR, { useSWRConfig } from "swr";
+
+type Sale = Database["public"]["Tables"]["sales"]["Row"];
 
 export default function ReportsPage() {
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"daily" | "monthly">("daily");
+  const { mutate: globalMutate } = useSWRConfig();
+  const { data: sales, error: salesError, mutate } = useSWR("reports-sales", async () => {
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-  useEffect(() => {
-    fetchSales();
-  }, []);
-
-  const fetchSales = async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from("sales")
       .select("*")
+      .gte("sold_at", threeMonthsAgo.toISOString())
       .order("sold_at", { ascending: false });
 
-    if (error) console.error(error);
-    else setSales(data || []);
-    setLoading(false);
-  };
+    if (error) throw error;
+    return data || [];
+  });
+
+  const [activeTab, setActiveTab] = useState<"daily" | "monthly">("daily");
+  const loading = !sales && !salesError;
 
   const handleDeleteSale = async (sale: any) => {
     if (
@@ -41,9 +40,7 @@ export default function ReportsPage() {
     try {
       // 1. Restaurar stock si el producto aún existe
       if (sale.product_id) {
-        const { data: product, error: findError } = await (
-          supabase.from("products") as any
-        )
+        const { data: product, error: findError } = await (supabase.from("products") as any)
           .select("stock")
           .eq("id", sale.product_id)
           .single();
@@ -64,7 +61,8 @@ export default function ReportsPage() {
       if (deleteError) throw deleteError;
 
       alert("Venta anulada y stock restaurado.");
-      fetchSales();
+      mutate();
+      globalMutate("products");
     } catch (error) {
       console.error("Error al borrar venta:", error);
       alert("No se pudo anular la venta.");
@@ -74,10 +72,10 @@ export default function ReportsPage() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const dailySales = sales.filter((s) => new Date(s.sold_at) >= today);
+  const dailySales = (sales || []).filter((s) => new Date(s.sold_at) >= today);
 
   // Group by month
-  const monthlySummary = sales.reduce((acc: any, sale) => {
+  const monthlySummary = (sales || []).reduce((acc: any, sale) => {
     const date = new Date(sale.sold_at);
     const month = date.toLocaleString("es-GT", {
       month: "long",

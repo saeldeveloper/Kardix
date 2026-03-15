@@ -13,6 +13,8 @@ import {
   Search,
 } from "lucide-react";
 
+import useSWR, { useSWRConfig } from "swr";
+
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
 interface CartItem {
@@ -21,34 +23,28 @@ interface CartItem {
 }
 
 export default function SalesPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [processing, setProcessing] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    setLoading(true);
+  const { mutate } = useSWRConfig();
+  const { data: products, error } = useSWR("products", async () => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
       .gt("stock", 0)
       .order("name", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  });
 
-    if (error) console.error(error);
-    else setProducts(data || []);
-    setLoading(false);
-  };
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [processing, setProcessing] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const loading = !products && !error;
 
   const filteredProducts =
     searchQuery.trim() === ""
       ? []
-      : products.filter(
+      : (products || []).filter(
           (p) =>
             p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             (p.category?.toLowerCase() || "").includes(
@@ -98,33 +94,22 @@ export default function SalesPage() {
     setProcessing(true);
 
     try {
-      // 1. Insert sales records
-      const salesData = cart.map((item) => ({
-        product_id: item.product.id,
-        product_name: item.product.name,
-        quantity: item.quantity,
-        unit_price: item.product.price,
-        total: item.product.price * item.quantity,
-      }));
-
-      const { error: salesError } = await (
-        supabase.from("sales") as any
-      ).insert(salesData);
-
-      if (salesError) throw salesError;
-
-      // 2. Update stock for each product
+      // Complete sales using the RPC function for atomicity
       for (const item of cart) {
-        const { error: stockError } = await (supabase.from("products") as any)
-          .update({ stock: item.product.stock - item.quantity })
-          .eq("id", item.product.id);
+        const { error: rpcError } = await supabase.rpc("complete_sale_v2", {
+          p_product_id: item.product.id,
+          p_product_name: item.product.name,
+          p_quantity: item.quantity,
+          p_unit_price: item.product.price,
+          p_total: item.product.price * item.quantity,
+        });
 
-        if (stockError) throw stockError;
+        if (rpcError) throw rpcError;
       }
 
       setSuccess(true);
       setCart([]);
-      fetchProducts();
+      mutate("products");
 
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {

@@ -7,64 +7,49 @@ import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
 import { Plus, Search, Loader2 } from "lucide-react";
 
+import useSWR, { useSWRConfig } from "swr";
+
 type Product = Database["public"]["Tables"]["products"]["Row"];
 type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    setLoading(true);
+  const { mutate } = useSWRConfig();
+  const { data: products, error, isValidating } = useSWR("products", async () => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
       .order("name", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  });
 
-    if (error) {
-      console.error("Error fetching products:", error);
-    } else {
-      setProducts(data || []);
-    }
-    setLoading(false);
-  };
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  const loading = !products && !error;
 
   const handleSaveProduct = async (productData: ProductInsert) => {
     console.log("Iniciando guardado de producto:", productData);
     try {
       if (editingProduct) {
         console.log("Actualizando producto existente, ID:", editingProduct.id);
-        const { error } = await (supabase
-          .from("products") as any)
+        const { error } = await (supabase.from("products") as any)
           .update(productData)
           .eq("id", editingProduct.id);
         
-        if (error) {
-          console.error("Error de Supabase al actualizar:", error);
-          throw error;
-        }
+        if (error) throw error;
       } else {
         console.log("Insertando nuevo producto...");
-        const { error } = await (supabase
-          .from("products") as any)
+        const { error } = await (supabase.from("products") as any)
           .insert([productData]);
         
-        if (error) {
-          console.error("Error de Supabase al insertar:", error);
-          throw error;
-        }
+        if (error) throw error;
       }
-      console.log("Producto guardado con éxito. Refrescando lista...");
-      fetchProducts();
+      mutate("products");
+      setIsModalOpen(false);
     } catch (error: any) {
-      console.error("Error capturado en handleSaveProduct:", error);
+      console.error("Error guardando producto:", error);
       alert("Error al guardar: " + (error.message || "Error desconocido"));
     }
   };
@@ -79,12 +64,12 @@ export default function ProductsPage() {
       if (error) {
         alert("No se pudo eliminar el producto. Podría tener ventas asociadas.");
       } else {
-        fetchProducts();
+        mutate("products");
       }
     }
   };
 
-  const filteredProducts = products.filter((p) =>
+  const filteredProducts = (products || []).filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (p.category?.toLowerCase() || "").includes(searchQuery.toLowerCase())
   );

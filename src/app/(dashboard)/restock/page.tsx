@@ -13,31 +13,27 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import useSWR from "swr";
+
 type Product = Database["public"]["Tables"]["products"]["Row"];
 
 export default function RestockPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [threshold, setThreshold] = useState(10);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
-  const fetchProducts = async () => {
-    setLoading(true);
+  const { data: products, error } = useSWR("products", async () => {
     const { data, error } = await supabase
       .from("products")
       .select("*")
       .order("stock", { ascending: true });
+    
+    if (error) throw error;
+    return data || [];
+  });
 
-    if (error) console.error(error);
-    else setProducts(data || []);
-    setLoading(false);
-  };
+  const [threshold, setThreshold] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const lowStockProducts = products.filter((p) => p.stock <= threshold);
+  const loading = !products && !error;
+
+  const lowStockProducts = (products || []).filter((p) => p.stock <= threshold);
 
   const filteredProducts = lowStockProducts.filter(
     (p) =>

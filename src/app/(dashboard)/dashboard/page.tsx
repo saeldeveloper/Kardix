@@ -6,67 +6,49 @@ import { Database } from "@/types/database";
 import { Search, Loader2, Package, TrendingUp, Calendar } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 
+import useSWR from "swr";
+
 type Product = Database["public"]["Tables"]["products"]["Row"];
+type Sale = Database["public"]["Tables"]["sales"]["Row"];
 
 export default function DashboardPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [summary, setSummary] = useState({
-    stockCount: 0,
-    dailySales: 0,
-    monthlySales: 0,
-  });
-
-  useEffect(() => {
-    console.log("Dashboard montado, iniciando carga de datos...");
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    setLoading(true);
-
-    // 1. Fetch Products
-    const { data: productsData } = await supabase
+  const { data: products, error: productsError } = useSWR("products", async () => {
+    const { data } = await supabase
       .from("products")
       .select("*")
       .order("name", { ascending: true });
+    return data || [];
+  });
 
-    const fetchedProducts = (productsData || []) as Product[];
-    setProducts(fetchedProducts);
-
-    // 2. Fetch Sales for Summary
+  const { data: sales, error: salesError } = useSWR("dashboard-sales", async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    const { data: salesData } = await supabase
+    const { data } = await supabase
       .from("sales")
-      .select("total, sold_at");
+      .select("total, sold_at")
+      .gte("sold_at", startOfMonth.toISOString());
+    return data || [];
+  });
 
-    if (salesData) {
-      const typedSales = salesData as { total: number; sold_at: string }[];
+  const [searchQuery, setSearchQuery] = useState("");
 
-      const daily = typedSales
-        .filter((s) => new Date(s.sold_at) >= today)
-        .reduce((sum, s) => sum + s.total, 0);
+  const loading = !products && !productsError || !sales && !salesError;
 
-      const monthly = typedSales
-        .filter((s) => new Date(s.sold_at) >= startOfMonth)
-        .reduce((sum, s) => sum + s.total, 0);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
-      setSummary({
-        stockCount: fetchedProducts.length,
-        dailySales: daily,
-        monthlySales: monthly,
-      });
-    }
-
-    setLoading(false);
+  const summary = {
+    stockCount: products?.length || 0,
+    dailySales: (sales as any[])?.filter((s) => new Date(s.sold_at) >= today)
+      .reduce((sum, s) => sum + s.total, 0) || 0,
+    monthlySales: (sales as any[])?.filter((s) => new Date(s.sold_at) >= startOfMonth)
+      .reduce((sum, s) => sum + s.total, 0) || 0,
   };
 
-  const filteredProducts = products.filter(
+  const filteredProducts = (products || []).filter(
     (p) =>
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.category?.toLowerCase() || "").includes(searchQuery.toLowerCase()),
@@ -111,8 +93,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="card flex items-center gap-4">
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <Calendar className="w-6 h-6 text-blue-600" />
+          <div className="p-3 bg-primary/10 rounded-lg">
+            <Calendar className="w-6 h-6 text-primary" />
           </div>
           <div>
             <p className="text-xs text-text-secondary uppercase tracking-wider font-medium">

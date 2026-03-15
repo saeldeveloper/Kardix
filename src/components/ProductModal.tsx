@@ -89,7 +89,7 @@ export default function ProductModal({
                 setFormData({ ...formData, name: e.target.value })
               }
               className="input-field"
-              placeholder="Ej. Cuaderno de espiral"
+              placeholder="Nombre del producto"
             />
           </div>
 
@@ -143,7 +143,7 @@ export default function ProductModal({
                 setFormData({ ...formData, category: e.target.value })
               }
               className="input-field"
-              placeholder="Ej. Papelería, Escritura"
+              placeholder="Categoría o descripción"
             />
           </div>
 

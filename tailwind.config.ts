@@ -11,7 +11,7 @@ const config: Config = {
       colors: {
         background: "#FFFFFF",
         surface: "#F8F8F6",
-        primary: "#1A56DB", // Acento primario azul sobrio
+        primary: "#b539ff", // Acento primario morado
         text: {
           primary: "#1A1A1A",
           secondary: "#6B7280",
