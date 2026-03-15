@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -53,9 +54,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface p-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-sm">
-        <div className="bg-white p-8 rounded-lg border border-border">
+        <div className="bg-surface p-8 rounded-lg border border-border">
           <div className="mb-8 flex flex-col items-center">
             <h1 className="text-2xl font-bold text-primary">Kardix</h1>
             <p className="text-sm text-text-secondary mt-1">Acceso Administrativo</p>
