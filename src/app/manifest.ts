@@ -2,8 +2,8 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "TrakerApp - Gestión de Negocio",
-    short_name: "TrakerApp",
+    name: "Kardix - Gestión de Negocio",
+    short_name: "Kardix",
     description: "Sistema eficiente para el control de inventario y ventas.",
     start_url: "/",
     display: "standalone",

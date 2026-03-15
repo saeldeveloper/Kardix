@@ -14,7 +14,10 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "TrakerApp - Gestión de Inventario",
+  icons: {
+    icon: "/icon.svg",
+  },
+  title: "Kardix - Gestión de Inventario",
   description: "Sistema inteligente de gestión de inventario y ventas para tu negocio.",
 };
 

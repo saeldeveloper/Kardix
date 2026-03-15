@@ -57,7 +57,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="bg-white p-8 rounded-lg border border-border">
           <div className="mb-8 flex flex-col items-center">
-            <h1 className="text-2xl font-bold text-primary">Vaultly</h1>
+            <h1 className="text-2xl font-bold text-primary">Kardix</h1>
             <p className="text-sm text-text-secondary mt-1">Acceso Administrativo</p>
           </div>
 

@@ -9,7 +9,7 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-white">
       {/* Mobile Top Header */}
       <div className="md:hidden p-4 border-b border-border bg-white flex justify-center sticky top-0 z-40">
-        <h1 className="text-lg font-bold text-primary">TrakerApp</h1>
+        <h1 className="text-lg font-bold text-primary">Kardix</h1>
       </div>
 
       <Sidebar />

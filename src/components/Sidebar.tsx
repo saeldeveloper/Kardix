@@ -48,7 +48,7 @@ export default function Sidebar() {
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r border-border bg-white flex-col">
         <div className="p-6 border-b border-border">
-          <h1 className="text-xl font-bold tracking-tight text-primary">Vaultly</h1>
+          <h1 className="text-xl font-bold tracking-tight text-primary">Kardix</h1>
           <p className="text-[10px] text-text-secondary uppercase tracking-[0.1em] mt-1 font-medium">
             Gestión de Inventario
           </p>
