@@ -35,7 +35,7 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { isInstallable, handleInstallClick } = usePWAInstall();
+  const { isInstallable, handleInstallClick, isIOS, isChromium } = usePWAInstall();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -78,17 +78,42 @@ export default function Sidebar() {
         <div className="p-4 border-t border-border relative">
           {isSettingsOpen && (
             <div className="absolute bottom-full left-4 right-4 mb-2 bg-white border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+              <Link 
+                href="/settings"
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left text-sm text-text-secondary hover:bg-surface hover:text-text-primary transition-colors border-b border-border"
+              >
+                <Settings className="w-4 h-4" />
+                Ir a Configuración
+              </Link>
+              
               {isInstallable && (
                 <button 
                   onClick={() => {
                     handleInstallClick();
                     setIsSettingsOpen(false);
                   }}
-                  className="flex items-center gap-3 px-4 py-3 w-full text-left text-sm text-text-secondary hover:bg-surface hover:text-text-primary transition-colors border-b border-border"
+                  className="flex items-center gap-3 px-4 py-3 w-full text-left text-sm text-primary font-medium hover:bg-primary/5 transition-colors border-b border-border"
                 >
                   <Download className="w-4 h-4" />
                   Instalar App
                 </button>
+              )}
+              {isIOS && !isInstallable && (
+                <div className="px-4 py-3 border-b border-border">
+                  <p className="text-[10px] text-text-secondary uppercase font-bold mb-1">PWA para iOS</p>
+                  <p className="text-[11px] text-text-secondary leading-tight">
+                    Compartir {" > "} Agregar a inicio
+                  </p>
+                </div>
+              )}
+              {!isInstallable && !isIOS && isChromium && !window.matchMedia("(display-mode: standalone)").matches && (
+                 <div className="px-4 py-3 border-b border-border bg-surface/50">
+                    <p className="text-[10px] text-text-secondary uppercase font-bold mb-1">PWA Lista</p>
+                    <p className="text-[11px] text-text-secondary leading-tight">
+                       Instala desde el menú de tu navegador
+                    </p>
+                 </div>
               )}
               <button 
                 onClick={handleLogout}
@@ -137,13 +162,22 @@ export default function Sidebar() {
         <div className="relative">
           {isSettingsOpen && (
             <div className="absolute bottom-full right-0 mb-4 bg-white border border-border rounded-lg shadow-xl min-w-[160px] overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+              <Link 
+                href="/settings"
+                onClick={() => setIsSettingsOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 w-full text-left text-sm text-text-secondary hover:bg-surface border-b border-border"
+              >
+                <Settings className="w-4 h-4" />
+                Configuración
+              </Link>
+              
               {isInstallable && (
                 <button 
                   onClick={() => {
                     handleInstallClick();
                     setIsSettingsOpen(false);
                   }}
-                  className="flex items-center gap-3 px-4 py-3 w-full text-left text-sm text-text-secondary hover:bg-surface border-b border-border"
+                  className="flex items-center gap-3 px-4 py-3 w-full text-left text-sm text-primary font-medium hover:bg-primary/5 border-b border-border"
                 >
                   <Download className="w-4 h-4" />
                   Instalar App

@@ -44,3 +44,40 @@ body {
     @apply rounded-[8px] border border-border bg-surface p-4 transition-all;
   }
 }
+
+@layer utilities {
+  .animate-in {
+    animation-duration: 400ms;
+    animation-fill-mode: both;
+  }
+
+  .fade-in {
+    animation-name: fadeIn;
+  }
+
+  .slide-in-from-bottom-2 {
+    --tw-enter-translate-y: 0.5rem;
+    animation-name: slideInFromBottom;
+  }
+
+  .slide-in-from-bottom-4 {
+    --tw-enter-translate-y: 1rem;
+    animation-name: slideInFromBottom;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideInFromBottom {
+    from {
+      opacity: 0;
+      transform: translateY(var(--tw-enter-translate-y));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

@@ -2,6 +2,7 @@ import { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
+    id: "kardix-app",
     name: "Kardix - Gestión de Negocio",
     short_name: "Kardix",
     description: "Sistema eficiente para el control de inventario y ventas.",
@@ -14,11 +15,13 @@ export default function manifest(): MetadataRoute.Manifest {
         src: "/icon.svg",
         sizes: "192x192",
         type: "image/svg+xml",
+        purpose: "any",
       },
       {
         src: "/icon.svg",
         sizes: "512x512",
         type: "image/svg+xml",
+        purpose: "maskable",
       }
     ],
   };
