@@ -134,7 +134,7 @@ export default function SalesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Product Selection */}
         <div className="lg:col-span-2 space-y-4">
-          <div className="card bg-white p-0 overflow-hidden">
+          <div className="card p-0 overflow-hidden">
             <div className="p-4 border-b border-border bg-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="font-bold text-sm uppercase tracking-wider text-text-secondary">
                 Productos Disponibles
@@ -205,7 +205,7 @@ export default function SalesPage() {
 
         {/* Cart / Summary */}
         <div className="space-y-4">
-          <div className="card bg-white p-6 sticky top-8">
+          <div className="card p-6 sticky top-8">
             <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-primary" />
               Resumen de Venta

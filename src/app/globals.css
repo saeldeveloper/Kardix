@@ -3,9 +3,31 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #f9fafb; /* Fondo principal claro */
   --foreground: #1a1a1a;
+  --surface: #ffffff;    /* Superficie para tarjetas blancas */
   --primary: #b539ff;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B7280;
+  --border: #E5E7EB;
+  --success-bg: #ECFDF5;
+  --success-text: #059669;
+  --alert-bg: #FFFBEB;
+  --alert-text: #D97706;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --surface: #1a1a1a;
+  --primary: #c366ff;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --border: #262626;
+  --success-bg: #064e3b;
+  --success-text: #34d399;
+  --alert-bg: #451a03;
+  --alert-text: #fbbf24;
 }
 
 body {
@@ -38,7 +60,7 @@ body {
     @apply btn border border-border bg-transparent text-text-primary hover:bg-surface;
   }
   .input-field {
-    @apply w-full rounded-[8px] border border-border bg-white px-3 py-2 text-sm outline-none focus:border-primary transition-colors;
+    @apply w-full rounded-[8px] border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-primary transition-colors text-text-primary;
   }
   .card {
     @apply rounded-[8px] border border-border bg-surface p-4 transition-all;

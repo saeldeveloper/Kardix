@@ -6,9 +6,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background text-text-primary">
       {/* Mobile Top Header */}
-      <div className="md:hidden p-4 border-b border-border bg-white flex justify-center sticky top-0 z-40">
+      <div className="md:hidden p-4 border-b border-border bg-background flex justify-center sticky top-0 z-40">
         <h1 className="text-lg font-bold text-primary">Kardix</h1>
       </div>
 

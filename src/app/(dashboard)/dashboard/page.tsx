@@ -79,8 +79,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="card flex items-center gap-4">
-          <div className="p-3 bg-green-50 rounded-lg">
-            <TrendingUp className="w-6 h-6 text-green-600" />
+          <div className="p-3 bg-success-bg rounded-lg">
+            <TrendingUp className="w-6 h-6 text-success-text" />
           </div>
           <div>
             <p className="text-xs text-text-secondary uppercase tracking-wider font-medium">

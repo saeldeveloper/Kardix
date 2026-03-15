@@ -63,14 +63,14 @@ export default function ProductModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-md rounded-lg shadow-xl border border-border overflow-hidden">
+      <div className="bg-surface w-full max-w-md rounded-lg shadow-xl border border-border overflow-hidden">
         <div className="flex items-center justify-between p-4 border-b border-border bg-surface">
           <h2 className="text-lg font-bold text-text-primary">
             {product ? "Editar Producto" : "Nuevo Producto"}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-white rounded-md transition-colors text-text-secondary"
+            className="p-1 hover:bg-background rounded-md transition-colors text-text-secondary"
           >
             <X className="w-5 h-5" />
           </button>

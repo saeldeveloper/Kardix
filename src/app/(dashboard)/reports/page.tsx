@@ -102,7 +102,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card bg-white border-l-4 border-l-primary">
+        <div className="card border-l-4 border-l-primary">
           <p className="text-xs text-text-secondary uppercase tracking-wider font-bold mb-1">
             Total Hoy
           </p>
@@ -115,7 +115,7 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className="card bg-white border-l-4 border-l-green-600">
+        <div className="card border-l-4 border-l-success-text">
           <p className="text-xs text-text-secondary uppercase tracking-wider font-bold mb-1">
             Total Mes ({currentMonth})
           </p>
@@ -129,13 +129,13 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="card bg-white p-0 overflow-hidden">
+      <div className="card p-0 overflow-hidden">
         <div className="flex border-b border-border bg-surface">
           <button
             onClick={() => setActiveTab("daily")}
             className={`px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
               activeTab === "daily"
-                ? "border-primary text-primary bg-white"
+                ? "border-primary text-primary bg-background"
                 : "border-transparent text-text-secondary hover:text-text-primary"
             }`}
           >
@@ -145,7 +145,7 @@ export default function ReportsPage() {
             onClick={() => setActiveTab("monthly")}
             className={`px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
               activeTab === "monthly"
-                ? "border-primary text-primary bg-white"
+                ? "border-primary text-primary bg-background"
                 : "border-transparent text-text-secondary hover:text-text-primary"
             }`}
           >
@@ -228,7 +228,7 @@ export default function ReportsPage() {
                     className="flex items-center justify-between p-4 border border-border rounded-lg bg-surface"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-white rounded flex items-center justify-center border border-border">
+                      <div className="w-8 h-8 bg-background rounded flex items-center justify-center border border-border">
                         <Calendar className="w-4 h-4 text-primary" />
                       </div>
                       <span className="capitalize font-medium text-text-primary">

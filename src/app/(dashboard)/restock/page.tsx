@@ -86,7 +86,7 @@ export default function RestockPage() {
           Cargando inventario...
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="card bg-white p-0 overflow-hidden">
+        <div className="card p-0 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="bg-surface border-b border-border text-text-secondary uppercase text-[10px] tracking-widest">
@@ -149,7 +149,7 @@ export default function RestockPage() {
 
       <div className="bg-primary/5 rounded-xl p-6 border border-primary/10 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-white rounded-lg border border-primary/20">
+          <div className="p-3 bg-surface rounded-lg border border-primary/20">
             <ShoppingCart className="w-6 h-6 text-primary" />
           </div>
           <div>

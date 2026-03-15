@@ -37,13 +37,13 @@ export default function ProductCard({
         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={() => onEdit(product)}
-            className="p-1.5 hover:bg-white rounded-md text-text-secondary hover:text-primary transition-colors"
+            className="p-1.5 hover:bg-surface rounded-md text-text-secondary hover:text-primary transition-colors"
           >
             <Edit2 className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => onDelete(product.id)}
-            className="p-1.5 hover:bg-white rounded-md text-text-secondary hover:text-red-500 transition-colors"
+            className="p-1.5 hover:bg-surface rounded-md text-text-secondary hover:text-red-500 transition-colors"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -68,10 +68,10 @@ export default function ProductCard({
             className={cn(
               "px-2 py-1 rounded text-[11px] font-bold uppercase tracking-wider",
               isOutOfStock
-                ? "bg-red-50 text-red-600"
+                ? "bg-red-500/10 text-red-500"
                 : isLowStock
-                  ? "bg-alert-bg text-alert-text"
-                  : "bg-success-bg text-success-text",
+                  ? "bg-alert-bg text-alert-text border border-alert-text/10"
+                  : "bg-success-bg text-success-text border border-success-text/10",
             )}
           >
             {isOutOfStock ? "Agotado" : `${product.stock} unidades`}

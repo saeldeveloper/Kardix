@@ -21,13 +21,16 @@ export const metadata: Metadata = {
   description: "Sistema inteligente de gestión de inventario y ventas para tu negocio.",
 };
 
+import { ThemeProvider } from "@/components/theme-provider";
+import { AccentProvider } from "@/components/accent-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#1A56DB" />
         <meta name="mobile-web-app-capable" content="yes" />
@@ -35,11 +38,34 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Kardix" />
         <link rel="apple-touch-icon" href="/icon.svg" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('kardix-accent');
+                  if (stored) {
+                    document.documentElement.style.setProperty('--primary', stored);
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AccentProvider>
+            {children}
+          </AccentProvider>
+        </ThemeProvider>
         <script
           dangerouslySetInnerHTML={{
             __html: `

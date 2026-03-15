@@ -46,7 +46,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r border-border bg-white flex-col">
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 border-r border-border bg-background flex-col">
         <div className="p-6 border-b border-border">
           <h1 className="text-xl font-bold tracking-tight text-primary">Kardix</h1>
           <p className="text-[10px] text-text-secondary uppercase tracking-[0.1em] mt-1 font-medium">
@@ -77,7 +77,7 @@ export default function Sidebar() {
 
         <div className="p-4 border-t border-border relative">
           {isSettingsOpen && (
-            <div className="absolute bottom-full left-4 right-4 mb-2 bg-white border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+            <div className="absolute bottom-full left-4 right-4 mb-2 bg-white dark:bg-surface border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-2">
               <Link 
                 href="/settings"
                 onClick={() => setIsSettingsOpen(false)}
@@ -141,7 +141,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-border flex items-center justify-around px-4 z-50">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white dark:bg-surface border-t border-border flex items-center justify-around px-4 z-50">
         {menuItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -161,7 +161,7 @@ export default function Sidebar() {
         
         <div className="relative">
           {isSettingsOpen && (
-            <div className="absolute bottom-full right-0 mb-4 bg-white border border-border rounded-lg shadow-xl min-w-[160px] overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+            <div className="absolute bottom-full right-0 mb-4 bg-white dark:bg-surface border border-border rounded-lg shadow-xl min-w-[160px] overflow-hidden animate-in fade-in slide-in-from-bottom-4">
               <Link 
                 href="/settings"
                 onClick={() => setIsSettingsOpen(false)}
