@@ -1,36 +1,176 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kardix 🚀
 
-## Getting Started
+<div align="center">
+  <video src="./kardix.mp4" width="100%" controls>
+    Your browser does not support the video tag.
+  </video>
+</div>
 
-First, run the development server:
+## 📌 What is Kardix?
+Kardix is a modern web application oriented towards efficient inventory management and systematic sales control. It offers an interactive Dashboard that allows users to manage their product catalog, monitor stock in real-time, and execute commercial transactions quickly and securely.
 
+## 🎯 The Problem it Solves
+Inventory and sales control is often a tedious process for small and medium-sized businesses, which usually resort to slow tools or manual spreadsheets susceptible to failure. **Kardix** tackles this problem by providing:
+- **Total Centralization:** All information about inventories, products, and sales transactions consolidated in a single environment.
+- **Efficiency and Speed:** Almost instantaneous synchronization. The advanced use of client-side caching means the application has no wait times during navigation.
+- **Transactional Integrity:** When making exchanges or sales, the system executes atomic transactions that prevent data inconsistencies, even under concurrency.
+- **User Experience (UI/UX):** A polished and modern user interface, fully optimized for light or dark mode environments, facilitating operability.
+
+## 🛠️ Tech Stack
+To ensure scalability, security, and maximum performance, the project uses the following tools:
+
+- **Frontend / Framework:** [Next.js 16](https://nextjs.org/) (App Router) and [React 18](https://react.dev/).
+- **Storage and Database:** [Supabase](https://supabase.com/) as a Backend-as-a-Service, operating on PostgreSQL.
+- **Caching and State Management:** [SWR](https://swr.vercel.app/) for efficient request management and real-time data invalidation.
+- **Styling and Components:** [Tailwind CSS](https://tailwindcss.com/) combined with utilities like `clsx` and `tailwind-merge` for dynamic classes.
+- **Iconography:** [Lucide React](https://lucide.dev/).
+- **Visual Adaptability:** `next-themes` for seamless support between Light Mode and Dark Mode.
+
+
+
+## 🚀 Deployment
+
+Because this system handles sensitive information, **Supabase credentials and API keys must never be committed to the public repository**. 
+
+To deploy this application on a platform like **Vercel** or **Netlify**, you must manually set up your own environment variables:
+
+### 1. Cloning and Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/YOUR_USERNAME/kardix.git
+cd kardix
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Prepare the Supabase Environment
+1. Go to [Supabase](https://supabase.com/) and set up a new project.
+2. Go to the **SQL Editor** in your Supabase dashboard. Below are different "queries". We recommend creating a "New Query" in Supabase for each of these blocks and executing them in order:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+<details>
+<summary><b>Show SQL Scripts (4 Files)</b></summary>
+<br>
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**1️⃣ Query 1: Base table creation**
+```sql
+-- 1. Create products table
+CREATE TABLE products (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name TEXT NOT NULL,
+  price DECIMAL(10,2) NOT NULL,
+  stock INTEGER NOT NULL DEFAULT 0,
+  category TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
-## Learn More
+-- 2. Create sales table
+CREATE TABLE sales (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  product_id UUID REFERENCES products(id),
+  quantity INTEGER NOT NULL,
+  unit_price DECIMAL(10,2) NOT NULL,
+  total DECIMAL(10,2) NOT NULL,
+  sold_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
 
-To learn more about Next.js, take a look at the following resources:
+**2️⃣ Query 2: Sales table modification**
+```sql
+-- 1. Add column to save the product name in the sale
+ALTER TABLE sales ADD COLUMN product_name TEXT;
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+-- 2. Fill in the names of existing sales
+UPDATE sales s SET product_name = p.name FROM products p WHERE s.product_id = p.id;
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+-- 3. Make the name mandatory for future sales
+ALTER TABLE sales ALTER COLUMN product_name SET NOT NULL;
 
-## Deploy on Vercel
+-- 4. Allow deleting products without deleting their sales
+ALTER TABLE sales DROP CONSTRAINT IF EXISTS sales_product_id_fkey;
+ALTER TABLE sales ADD CONSTRAINT sales_product_id_fkey FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL;
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**3️⃣ Query 3: Security and user relationship**
+```sql
+-- 1. Add user_id column to existing tables
+ALTER TABLE products ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
+ALTER TABLE sales ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) DEFAULT auth.uid();
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+-- 2. Enable RLS (Row Level Security) for data isolation
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sales ENABLE ROW LEVEL SECURITY;
+
+-- 3. Create Security Policies
+-- Policy for Products: Only the owner can view/edit their products
+CREATE POLICY "Users can only access their own products" ON public.products
+FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- Policy for Sales: Only the owner can view their sales
+CREATE POLICY "Users can only access their own sales" ON public.sales
+FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- Note: If your tables already had data, you might want to manually assign the user_id of your current user to them.
+```
+
+**4️⃣ Query 4: Functions (Transactions) and Indexes**
+```sql
+-- 1. Function to complete sales safely (Transaction)
+-- This function receives the product ID and quantity, and does everything in one step.
+CREATE OR REPLACE FUNCTION complete_sale_v2(
+  p_product_id UUID,
+  p_product_name TEXT,
+  p_quantity INTEGER,
+  p_unit_price DECIMAL,
+  p_total DECIMAL
+) RETURNS VOID AS $$
+BEGIN
+  -- Insert the sale
+  INSERT INTO public.sales (user_id, product_id, product_name, quantity, unit_price, total)
+  VALUES (auth.uid(), p_product_id, p_product_name, p_quantity, p_unit_price, p_total);
+
+  -- Update the stock
+  UPDATE public.products
+  SET stock = stock - p_quantity
+  WHERE id = p_product_id AND user_id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 2. Add indexes for speed (this makes searches fast)
+CREATE INDEX IF NOT EXISTS idx_products_user_id ON products(user_id);
+CREATE INDEX IF NOT EXISTS idx_sales_user_id ON sales(user_id);
+CREATE INDEX IF NOT EXISTS idx_sales_sold_at ON sales(sold_at);
+CREATE INDEX IF NOT EXISTS idx_products_stock ON products(stock);
+```
+</details>
+
+3. Go to **Project Settings** > **API** in your Supabase dashboard. There you will find two critical values: your project URL and the public key (`anon` key).
+
+### 3. Configure your Platform (e.g., Vercel)
+1. Import the repository from your GitHub account into [Vercel](https://vercel.com/new).
+2. Before starting the first deployment, open the **Environment Variables** options and add the following fields:
+
+   - **`NEXT_PUBLIC_SUPABASE_URL`**: With the value of your URL copied from Supabase.
+   - **`NEXT_PUBLIC_SUPABASE_ANON_KEY`**: With your public `anon` key.
+
+3. Click **Deploy**. Vercel will read and inject these variables during the build (`Next.js Build`), securely connecting your production environment with the database without exposing it in your repository.
+
+*Development Note: If you test the code on your personal computer, create a hidden `.env.local` file in the root and introduce these same variables there.*
+
+---
+
+<details>
+<summary><b>📐 Folder Structure & Core Components</b></summary>
+<br>
+
+The core of the application rests in the `src/` directory.
+
+```text
+src/
+├── app/            # Main views via App Router, globals.css, layout.tsx
+├── components/     # Modular fragments, like ProductCard, Sidebar
+├── hooks/          # Reactivity abstractions (useProducts, etc.)
+├── lib/            # Supabase client instances
+└── types/          # Polymorphism and typed interfaces for TS
+```
+
+To modify the design scheme (`Dark Theme`/`Light Theme`), you can freely alter the hex codes in the native variables located in `src/app/globals.css`.
+
+</details>
