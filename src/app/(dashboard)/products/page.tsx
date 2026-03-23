@@ -5,7 +5,9 @@ import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/database";
 import ProductCard from "@/components/ProductCard";
 import ProductModal from "@/components/ProductModal";
+import { useNotification } from "@/components/Notification";
 import { Plus, Search, Loader2 } from "lucide-react";
+import ConfirmModal from "@/components/ConfirmModal";
 
 import useSWR, { useSWRConfig } from "swr";
 
@@ -13,6 +15,7 @@ type Product = Database["public"]["Tables"]["products"]["Row"];
 type ProductInsert = Database["public"]["Tables"]["products"]["Insert"];
 
 export default function ProductsPage() {
+  const { showNotification } = useNotification();
   const { mutate } = useSWRConfig();
   const { data: products, error, isValidating } = useSWR("products", async () => {
     const { data, error } = await supabase
@@ -26,6 +29,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const loading = !products && !error;
 
@@ -48,25 +52,32 @@ export default function ProductsPage() {
       }
       mutate("products");
       setIsModalOpen(false);
+      showNotification(editingProduct ? "Producto actualizado." : "Producto creado.");
     } catch (error: any) {
       console.error("Error guardando producto:", error);
-      alert("Error al guardar: " + (error.message || "Error desconocido"));
+      showNotification("Error al guardar: " + (error.message || "Error desconocido"), "error");
     }
   };
 
-  const handleDeleteProduct = async (id: string) => {
-    if (confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-      const { error } = await supabase
-        .from("products")
-        .delete()
-        .eq("id", id);
-      
-      if (error) {
-        alert("No se pudo eliminar el producto. Podría tener ventas asociadas.");
-      } else {
-        mutate("products");
-      }
+  const handleDeleteProduct = (id: string) => {
+    setDeleteId(id);
+  };
+
+  const confirmDeleteProduct = async () => {
+    if (!deleteId) return;
+    
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", deleteId);
+    
+    if (error) {
+      showNotification("No se pudo eliminar el producto. Podría tener ventas asociadas.", "error");
+    } else {
+      mutate("products");
+      showNotification("Producto eliminado correctamente.");
     }
+    setDeleteId(null);
   };
 
   const filteredProducts = (products || []).filter((p) =>
@@ -142,6 +153,16 @@ export default function ProductsPage() {
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveProduct}
         product={editingProduct}
+      />
+
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={confirmDeleteProduct}
+        title="Eliminar Producto"
+        message="¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer y fallará si el producto tiene ventas asociadas."
+        confirmText="Eliminar"
+        variant="danger"
       />
     </div>
   );

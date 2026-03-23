@@ -14,6 +14,7 @@ import {
   PlusCircle,
   X,
 } from "lucide-react";
+import { useNotification } from "@/components/Notification";
 
 import useSWR, { useSWRConfig } from "swr";
 
@@ -26,6 +27,7 @@ interface CartItem {
 }
 
 export default function SalesPage() {
+  const { showNotification } = useNotification();
   const { mutate } = useSWRConfig();
   const { data: products, error } = useSWR("products", async () => {
     const { data, error } = await supabase
@@ -150,7 +152,7 @@ export default function SalesPage() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
       console.error("Error completing sale:", error);
-      alert("Hubo un error al procesar la venta.");
+      showNotification("Hubo un error al procesar la venta.", "error");
     } finally {
       setProcessing(false);
     }

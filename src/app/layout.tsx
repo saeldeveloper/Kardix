@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 
 import { ThemeProvider } from "@/components/theme-provider";
 import { AccentProvider } from "@/components/accent-provider";
+import { NotificationProvider } from "@/components/Notification";
 
 export default function RootLayout({
   children,
@@ -63,7 +64,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AccentProvider>
-            {children}
+            <NotificationProvider>
+              {children}
+            </NotificationProvider>
           </AccentProvider>
         </ThemeProvider>
         <script

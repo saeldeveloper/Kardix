@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/database";
-import { Calendar, TrendingUp, Loader2, Trash2 } from "lucide-react";
+import { Calendar, TrendingUp, Loader2, Trash2, CalendarDays } from "lucide-react";
+import MonthlyCalendarModal from "@/components/MonthlyCalendarModal";
+import ConfirmModal from "@/components/ConfirmModal";
+import { useNotification } from "@/components/Notification";
 
 import useSWR, { useSWRConfig } from "swr";
 
 type Sale = Database["public"]["Tables"]["sales"]["Row"];
 
 export default function ReportsPage() {
+  const { showNotification } = useNotification();
   const { mutate: globalMutate } = useSWRConfig();
   const { data: sales, error: salesError, mutate } = useSWR("reports-sales", async () => {
     const threeMonthsAgo = new Date();
@@ -26,16 +30,17 @@ export default function ReportsPage() {
   });
 
   const [activeTab, setActiveTab] = useState<"daily" | "monthly">("daily");
+  const [selectedMonth, setSelectedMonth] = useState<{ name: string; date: Date } | null>(null);
+  const [saleToDelete, setSaleToDelete] = useState<any | null>(null);
   const loading = !sales && !salesError;
 
-  const handleDeleteSale = async (sale: any) => {
-    if (
-      !confirm(
-        `¿Estás seguro de que deseas anular esta venta de "${sale.product_name}"? Las unidades se devolverán al inventario.`,
-      )
-    ) {
-      return;
-    }
+  const handleDeleteSale = (sale: any) => {
+    setSaleToDelete(sale);
+  };
+
+  const confirmDeleteSale = async () => {
+    if (!saleToDelete) return;
+    const sale = saleToDelete;
 
     try {
       // 1. Restaurar stock si el producto aún existe
@@ -60,12 +65,14 @@ export default function ReportsPage() {
 
       if (deleteError) throw deleteError;
 
-      alert("Venta anulada y stock restaurado.");
+      showNotification("Venta anulada y stock restaurado.");
       mutate();
       globalMutate("products");
     } catch (error) {
       console.error("Error al borrar venta:", error);
-      alert("No se pudo anular la venta.");
+      showNotification("No se pudo anular la venta.", "error");
+    } finally {
+      setSaleToDelete(null);
     }
   };
 
@@ -75,22 +82,25 @@ export default function ReportsPage() {
   const dailySales = (sales || []).filter((s) => new Date(s.sold_at) >= today);
 
   // Group by month
-  const monthlySummary = (sales || []).reduce((acc: any, sale) => {
-    const date = new Date(sale.sold_at);
-    const month = date.toLocaleString("es-GT", {
-      month: "long",
-      year: "numeric",
-    });
-    if (!acc[month]) acc[month] = 0;
-    acc[month] += sale.total;
-    return acc;
-  }, {});
+  const monthlySummary = (sales || []).reduce(
+    (acc: Record<string, { total: number; date: Date }>, sale) => {
+      const date = new Date(sale.sold_at);
+      const month = date.toLocaleString("es-GT", {
+        month: "long",
+        year: "numeric",
+      });
+      if (!acc[month]) acc[month] = { total: 0, date: date };
+      acc[month].total += sale.total;
+      return acc;
+    },
+    {},
+  );
 
   const currentMonth = today.toLocaleString("es-GT", {
     month: "long",
     year: "numeric",
   });
-  const currentMonthTotal = monthlySummary[currentMonth] || 0;
+  const currentMonthTotal = monthlySummary[currentMonth]?.total || 0;
 
   return (
     <div className="space-y-8">
@@ -222,29 +232,61 @@ export default function ReportsPage() {
           ) : (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(monthlySummary).map(([month, total]) => (
-                  <div
+                {Object.entries(monthlySummary).map(([month, data]) => (
+                  <button
                     key={month}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg bg-surface"
+                    onClick={() =>
+                      setSelectedMonth({ name: month, date: data.date })
+                    }
+                    className="flex items-center justify-between p-5 border border-border rounded-xl bg-surface hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all text-left group"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-background rounded flex items-center justify-center border border-border">
-                        <Calendar className="w-4 h-4 text-primary" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-background rounded-lg flex items-center justify-center border border-border group-hover:border-primary/30 group-hover:bg-primary/5 transition-colors">
+                        <CalendarDays className="w-5 h-5 text-primary" />
                       </div>
-                      <span className="capitalize font-medium text-text-primary">
-                        {month}
+                      <div>
+                        <span className="capitalize font-bold text-text-primary block text-lg">
+                          {month}
+                        </span>
+                        <span className="text-xs text-text-secondary">
+                          Ver actividad en calendario
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-bold text-xl block text-text-primary">
+                        Q {data.total.toFixed(2)}
                       </span>
                     </div>
-                    <span className="font-bold text-lg">
-                      Q {(total as number).toFixed(2)}
-                    </span>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {selectedMonth && (
+        <MonthlyCalendarModal
+          isOpen={!!selectedMonth}
+          onClose={() => setSelectedMonth(null)}
+          monthName={selectedMonth.name}
+          representativeDate={selectedMonth.date}
+          sales={sales || []}
+        />
+      )}
+
+      {saleToDelete && (
+        <ConfirmModal
+          isOpen={!!saleToDelete}
+          onClose={() => setSaleToDelete(null)}
+          onConfirm={confirmDeleteSale}
+          title="Anular Venta"
+          message={`¿Estás seguro de que deseas anular esta venta de "${saleToDelete.product_name}"? Las unidades se devolverán al inventario automáticamente.`}
+          confirmText="Anular Venta"
+          variant="danger"
+        />
+      )}
     </div>
   );
 }
