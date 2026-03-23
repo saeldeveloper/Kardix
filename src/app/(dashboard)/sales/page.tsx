@@ -11,6 +11,8 @@ import {
   Loader2,
   CheckCircle2,
   Search,
+  PlusCircle,
+  X,
 } from "lucide-react";
 
 import useSWR, { useSWRConfig } from "swr";
@@ -20,6 +22,7 @@ type Product = Database["public"]["Tables"]["products"]["Row"];
 interface CartItem {
   product: Product;
   quantity: number;
+  isManual?: boolean;
 }
 
 export default function SalesPage() {
@@ -38,6 +41,10 @@ export default function SalesPage() {
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualName, setManualName] = useState("");
+  const [manualPrice, setManualPrice] = useState("");
+  const [manualQuantity, setManualQuantity] = useState("1");
 
   const loading = !products && !error;
 
@@ -52,10 +59,10 @@ export default function SalesPage() {
             ),
         );
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, isManual = false) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
+      if (existing && !isManual) {
         if (existing.quantity >= product.stock) return prev;
         return prev.map((item) =>
           item.product.id === product.id
@@ -63,8 +70,32 @@ export default function SalesPage() {
             : item,
         );
       }
-      return [...prev, { product, quantity: 1 }];
+      // Para productos manuales, simplemente los agregamos como nuevos items si queremos,
+      // o los agrupamos por nombre. Por simplicidad, los agrupamos por ID generado.
+      return [...prev, { product, quantity: isManual ? parseInt(manualQuantity || "1") : 1, isManual }];
     });
+    if (isManual) {
+      setIsManualModalOpen(false);
+      setManualName("");
+      setManualPrice("");
+      setManualQuantity("1");
+    }
+  };
+
+  const addManualProduct = () => {
+    if (!manualName || !manualPrice) return;
+    
+    const manualProduct: Product = {
+      id: `manual-${Date.now()}`,
+      name: manualName,
+      price: parseFloat(manualPrice),
+      stock: 999999, // Dummy stock for manual
+      category: "Manual",
+      user_id: "", // Will be handled by DB or ignored
+      created_at: new Date().toISOString(),
+    };
+
+    addToCart(manualProduct, true);
   };
 
   const removeFromCart = (productId: string) => {
@@ -76,7 +107,7 @@ export default function SalesPage() {
       prev.map((item) => {
         if (item.product.id === productId) {
           const newQty = item.quantity + delta;
-          if (newQty < 1 || newQty > item.product.stock) return item;
+          if (newQty < 1 || (!item.isManual && newQty > item.product.stock)) return item;
           return { ...item, quantity: newQty };
         }
         return item;
@@ -96,8 +127,13 @@ export default function SalesPage() {
     try {
       // Complete sales using the RPC function for atomicity
       for (const item of cart) {
+        // Para productos manuales, necesitamos un ID de producto válido si el RPC lo requiere.
+        // Intentaremos usar un ID nulo o vacío, o un ID especial si existe.
+        const isManual = item.isManual;
+        const productId = isManual ? null : item.product.id;
+
         const { error: rpcError } = await supabase.rpc("complete_sale_v2", {
-          p_product_id: item.product.id,
+          p_product_id: productId as any, // Bypass TS for manual
           p_product_name: item.product.name,
           p_quantity: item.quantity,
           p_unit_price: item.product.price,
@@ -133,21 +169,30 @@ export default function SalesPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Product Selection */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4 order-2 lg:order-1">
           <div className="card p-0 overflow-hidden">
             <div className="p-4 border-b border-border bg-surface flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="font-bold text-sm uppercase tracking-wider text-text-secondary">
                 Productos Disponibles
               </h2>
-              <div className="relative w-full md:w-64">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-secondary" />
-                <input
-                  type="text"
-                  placeholder="Buscar producto..."
-                  className="input-field pl-9 py-1.5 text-xs h-9"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+               <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                <div className="relative w-full md:w-64">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-secondary" />
+                  <input
+                    type="text"
+                    placeholder="Buscar producto..."
+                    className="input-field pl-9 py-1.5 text-xs h-9"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <button 
+                  onClick={() => setIsManualModalOpen(true)}
+                  className="btn-outline flex items-center justify-center gap-2 h-9 text-xs py-1"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  Producto Manual
+                </button>
               </div>
             </div>
 
@@ -190,12 +235,24 @@ export default function SalesPage() {
                 ) : (
                   <>
                     <p>No se encontraron productos para "{searchQuery}".</p>
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      className="text-primary text-xs mt-2 hover:underline font-medium"
-                    >
-                      Limpiar búsqueda
-                    </button>
+                    <div className="flex gap-4 mt-4">
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="text-text-secondary text-xs hover:underline font-medium"
+                      >
+                        Limpiar búsqueda
+                      </button>
+                      <button
+                        onClick={() => {
+                          setManualName(searchQuery);
+                          setIsManualModalOpen(true);
+                        }}
+                        className="text-primary text-xs hover:underline font-bold flex items-center gap-1"
+                      >
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        Agregar "{searchQuery}" manualmente
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
@@ -204,7 +261,7 @@ export default function SalesPage() {
         </div>
 
         {/* Cart / Summary */}
-        <div className="space-y-4">
+        <div className="space-y-4 order-1 lg:order-2">
           <div className="card p-6 sticky top-8">
             <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-primary" />
@@ -223,7 +280,14 @@ export default function SalesPage() {
                     className="flex flex-col gap-2 pb-4 border-b border-border last:border-0"
                   >
                     <div className="flex justify-between items-start">
-                      <p className="text-sm font-medium">{item.product.name}</p>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-medium">{item.product.name}</p>
+                          {item.isManual && (
+                            <span className="text-[9px] bg-alert-bg text-alert-text px-1 rounded font-bold uppercase tracking-tighter">Manual</span>
+                          )}
+                        </div>
+                      </div>
                       <button
                         onClick={() => removeFromCart(item.product.id)}
                         className="text-text-secondary hover:text-red-500"
@@ -289,6 +353,62 @@ export default function SalesPage() {
           </div>
         </div>
       </div>
+
+      {/* Manual Product Modal */}
+      {isManualModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+          <div className="bg-surface w-full max-w-md rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4">
+            <div className="p-6 border-b border-border flex justify-between items-center">
+              <h3 className="font-bold text-lg">Agregar Producto Manual</h3>
+              <button onClick={() => setIsManualModalOpen(false)} className="text-text-secondary hover:text-text-primary">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Nombre del Producto</label>
+                <input 
+                  type="text" 
+                  className="input-field" 
+                  placeholder="Ej. Servicio de Envío"
+                  value={manualName}
+                  onChange={(e) => setManualName(e.target.value)}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Precio Unitario (Q)</label>
+                  <input 
+                    type="number" 
+                    className="input-field" 
+                    placeholder="0.00"
+                    value={manualPrice}
+                    onChange={(e) => setManualPrice(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-text-secondary mb-1">Cantidad</label>
+                  <input 
+                    type="number" 
+                    className="input-field" 
+                    min="1"
+                    value={manualQuantity}
+                    onChange={(e) => setManualQuantity(e.target.value)}
+                  />
+                </div>
+              </div>
+              <button 
+                onClick={addManualProduct}
+                disabled={!manualName || !manualPrice}
+                className="w-full btn-primary py-3 mt-2 flex items-center justify-center gap-2"
+              >
+                <PlusCircle className="w-4 h-4" />
+                Agregar al Carrito
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
