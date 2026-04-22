@@ -70,8 +70,10 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Proteger todas las rutas excepto /login y archivos estáticos
-  if (!user && !request.nextUrl.pathname.startsWith('/login')) {
+  // Proteger rutas excepto /login, / (landing page) y archivos estáticos
+  const isPublicPath = request.nextUrl.pathname === '/' || request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.includes('.');
+  
+  if (!user && !isPublicPath) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -92,6 +94,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public (public assets)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:mp4|svg|png|jpg|jpeg|gif|webp|woff|woff2|js|css)$).*)',
   ],
 }
