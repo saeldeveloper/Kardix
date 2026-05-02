@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 import { ThemeProvider } from "@/components/theme-provider";
 import { AccentProvider } from "@/components/accent-provider";
 import { NotificationProvider } from "@/components/Notification";
+import Script from "next/script";
 
 export default function RootLayout({
   children,
@@ -39,20 +40,6 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Kardix" />
         <link rel="apple-touch-icon" href="/icon.svg" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var stored = localStorage.getItem('kardix-accent');
-                  if (stored) {
-                    document.documentElement.style.setProperty('--primary', stored);
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -69,7 +56,9 @@ export default function RootLayout({
             </NotificationProvider>
           </AccentProvider>
         </ThemeProvider>
-        <script
+        <Script
+          id="service-worker-registration"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {

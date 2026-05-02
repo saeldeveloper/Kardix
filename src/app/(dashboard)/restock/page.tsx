@@ -91,12 +91,12 @@ export default function RestockPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-surface border-b border-border text-text-secondary uppercase text-[10px] tracking-widest">
                 <tr>
-                  <th className="px-6 py-4 font-bold">Producto</th>
-                  <th className="px-6 py-4 font-bold">Categoría</th>
-                  <th className="px-6 py-4 font-bold text-center">
+                  <th className="px-3 py-4 font-bold md:px-6">Producto</th>
+                  <th className="px-3 py-4 font-bold md:px-6">Categoría</th>
+                  <th className="px-3 py-4 font-bold text-center md:px-6">
                     Stock Actual
                   </th>
-                  <th className="px-6 py-4 font-bold text-right">
+                  <th className="px-3 py-4 font-bold text-right md:px-6">
                     Precio Sugerido
                   </th>
                 </tr>
@@ -107,15 +107,15 @@ export default function RestockPage() {
                     key={product.id}
                     className="hover:bg-surface/50 transition-colors"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-4 md:px-6">
                       <p className="font-bold text-text-primary">
                         {product.name}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-text-secondary">
+                    <td className="px-3 py-4 text-text-secondary md:px-6">
                       {product.category || "General"}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-3 py-4 text-center md:px-6">
                       <span
                         className={`px-2 py-1 rounded-full text-[10px] font-bold ${
                           product.stock === 0
@@ -126,7 +126,7 @@ export default function RestockPage() {
                         {product.stock} unidades
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right font-medium">
+                    <td className="px-3 py-4 text-right font-medium md:px-6">
                       Q {product.price.toFixed(2)}
                     </td>
                   </tr>

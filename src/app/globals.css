@@ -3,13 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --background: #f9fafb; /* Fondo principal claro */
+  --background: 238, 242, 255; /* #EEF2FF */
   --foreground: #1a1a1a;
-  --surface: #ffffff;    /* Superficie para tarjetas blancas */
-  --primary: #b539ff;
+  --surface: 255, 255, 255;    /* #ffffff */
+  --primary: 181, 57, 255;     /* #b539ff */
   --text-primary: #1A1A1A;
   --text-secondary: #6B7280;
-  --border: #E5E7EB;
+  --border: 229, 231, 235;     /* #E5E7EB */
   --success-bg: #ECFDF5;
   --success-text: #059669;
   --alert-bg: #FFFBEB;
@@ -17,13 +17,13 @@
 }
 
 .dark {
-  --background: #222222;
+  --background: 58, 63, 95;    /* #3A3F5F */
   --foreground: #ededed;
-  --surface: #1a1a1a;
-  --primary: #c366ff;
+  --surface: 8, 16, 33;        /* #081021 */
+  --primary: 195, 102, 255;    /* #c366ff */
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
-  --border: #262626;
+  --border: 8, 16, 33;         /* #081021 */
   --success-bg: #064e3b;
   --success-text: #34d399;
   --alert-bg: #451a03;
@@ -36,6 +36,12 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 @layer base {
@@ -102,4 +108,21 @@ body {
       transform: translateY(0);
     }
   }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-border/50 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-border;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }

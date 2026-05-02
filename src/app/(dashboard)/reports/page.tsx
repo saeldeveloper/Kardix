@@ -143,7 +143,7 @@ export default function ReportsPage() {
         <div className="flex border-b border-border bg-surface">
           <button
             onClick={() => setActiveTab("daily")}
-            className={`px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`px-4 md:px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
               activeTab === "daily"
                 ? "border-primary text-primary bg-background"
                 : "border-transparent text-text-secondary hover:text-text-primary"
@@ -153,7 +153,7 @@ export default function ReportsPage() {
           </button>
           <button
             onClick={() => setActiveTab("monthly")}
-            className={`px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
+            className={`px-4 md:px-6 py-3 text-sm font-medium transition-colors border-b-2 ${
               activeTab === "monthly"
                 ? "border-primary text-primary bg-background"
                 : "border-transparent text-text-secondary hover:text-text-primary"
@@ -176,34 +176,42 @@ export default function ReportsPage() {
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="text-text-secondary uppercase text-[10px] tracking-widest border-b border-border">
-                        <th className="pb-3 font-bold">Producto</th>
-                        <th className="pb-3 font-bold">Cantidad</th>
-                        <th className="pb-3 font-bold">Precio Unit.</th>
-                        <th className="pb-3 font-bold text-right">Total</th>
-                        <th className="pb-3 font-bold text-right">Acciones</th>
+                        <th className="pb-3 px-2 font-bold">Producto</th>
+                        <th className="pb-3 px-2 font-bold text-center">Cant.</th>
+                        <th className="pb-3 px-2 font-bold hidden md:table-cell">Precio Unit.</th>
+                        <th className="pb-3 px-2 font-bold text-right">Total</th>
+                        <th className="pb-3 px-2 font-bold text-right">Acción</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {dailySales.map((sale) => (
-                        <tr
+                         <tr
                           key={sale.id}
                           className="hover:bg-surface transition-colors group"
                         >
-                          <td className="py-3 font-medium text-text-primary">
+                          <td className="py-3 px-2 font-medium text-text-primary text-xs md:text-sm">
                             {sale.product_name}
                           </td>
-                          <td className="py-3 text-text-secondary">
+                          <td className="py-3 px-2 text-text-secondary text-center">
                             {sale.quantity}
                           </td>
-                          <td className="py-3 text-text-secondary">
+                          <td className="py-3 px-2 text-text-secondary hidden md:table-cell">
                             Q {sale.unit_price.toFixed(2)}
                           </td>
-                          <td className="py-3 font-bold text-right text-text-primary">
-                            Q {sale.total.toFixed(2)}
+                          <td className="py-3 px-2 font-bold text-right text-text-primary whitespace-nowrap">
+                            <div className="flex flex-col items-end">
+                              <span>Q {sale.total.toFixed(2)}</span>
+                              <span className="text-[9px] font-normal text-text-secondary md:hidden">
+                                {new Date(sale.sold_at).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                            </div>
                           </td>
-                          <td className="py-3 text-right">
-                            <div className="flex items-center justify-end gap-3">
-                              <span className="text-[11px] text-text-secondary uppercase">
+                          <td className="py-3 px-2 text-right">
+                            <div className="flex items-center justify-end gap-2 md:gap-3">
+                              <span className="text-[11px] text-text-secondary uppercase hidden md:inline">
                                 {new Date(sale.sold_at).toLocaleTimeString([], {
                                   hour: "2-digit",
                                   minute: "2-digit",
@@ -211,10 +219,10 @@ export default function ReportsPage() {
                               </span>
                               <button
                                 onClick={() => handleDeleteSale(sale)}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-text-secondary hover:text-red-500 transition-all"
+                                className="p-1.5 text-text-secondary hover:text-red-500 transition-all md:opacity-0 md:group-hover:opacity-100"
                                 title="Anular venta"
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
                               </button>
                             </div>
                           </td>

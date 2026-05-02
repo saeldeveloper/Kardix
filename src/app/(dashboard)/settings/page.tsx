@@ -1,25 +1,181 @@
 "use client";
 
 import { usePWAInstall } from "@/hooks/usePWAInstall";
-import { Settings, Download, Smartphone, Laptop, CheckCircle2, Share, Moon, Sun, Palette, Check } from "lucide-react";
+import { Settings, Download, Smartphone, Laptop, CheckCircle2, Share, Moon, Sun, Palette, Check, User, Camera, Save, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAccent, ACCENT_COLORS } from "@/components/accent-provider";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useNotification } from "@/components/Notification";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export default function SettingsPage() {
   const { isInstallable, isInstalled, isIOS, isChromium, handleInstallClick } = usePWAInstall();
   const { color, setColor } = useAccent();
+  const { showNotification, hideNotification } = useNotification();
+  
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [fullName, setFullName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+
+  useEffect(() => {
+    async function getProfile() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        setFullName(user.user_metadata?.full_name || "");
+        setAvatarUrl(user.user_metadata?.avatar_url || "");
+      }
+    }
+    getProfile();
+  }, []);
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const loadingId = showNotification("Guardando cambios...", "loading");
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { 
+          full_name: fullName,
+          avatar_url: avatarUrl 
+        }
+      });
+
+      if (error) throw error;
+      
+      await supabase.auth.getUser();
+      hideNotification(loadingId);
+      showNotification("Perfil actualizado correctamente", "success");
+    } catch (error: any) {
+      hideNotification(loadingId);
+      showNotification("Error: " + error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const PREDEFINED_AVATARS = [
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Lily",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Jasper",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Buddy",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Lucky",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Willow",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Peanut",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Muffin",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Oscar",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Zoe",
+    "https://api.dicebear.com/7.x/lorelei/svg?seed=Coco"
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight text-text-primary">Configuración</h1>
         <p className="text-text-secondary">
-          Gestiona las preferencias de tu aplicación y la configuración de instalación.
+          Personaliza tu perfil y gestiona las preferencias de la aplicación.
         </p>
       </div>
 
       <div className="grid gap-6">
-        {/* Personalización Section */}
+        {/* Perfil Section */}
+        <section className="card p-6 bg-white dark:bg-surface shadow-sm hover:shadow-md transition-all border-border relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
+          <div className="flex flex-col gap-8">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              <div className="flex flex-col items-center gap-4">
+                <div className="relative group">
+                  <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center overflow-hidden shadow-inner">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    ) : (
+                      <User className="w-12 h-12 text-primary/40" />
+                    )}
+                  </div>
+                  <label className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform">
+                    <Camera className="w-4 h-4" />
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  </label>
+                </div>
+                <p className="text-[10px] text-text-secondary uppercase tracking-widest font-bold opacity-70">Foto de Perfil</p>
+              </div>
+
+              <div className="flex-1 w-full space-y-6">
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-text-primary">O elige un avatar predefinido:</h4>
+                  <div className="flex flex-wrap gap-3">
+                    {PREDEFINED_AVATARS.map((avatar) => (
+                      <button
+                        key={avatar}
+                        onClick={() => setAvatarUrl(avatar)}
+                        className={cn(
+                          "w-12 h-12 rounded-full border-2 transition-all hover:scale-110 active:scale-95 overflow-hidden",
+                          avatarUrl === avatar ? "border-primary ring-2 ring-primary/20 scale-110" : "border-transparent opacity-70 hover:opacity-100"
+                        )}
+                      >
+                        <img src={avatar} alt="Avatar option" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium text-text-primary">Nombre Completo</label>
+                    <input 
+                      type="text" 
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Tu nombre"
+                      className="w-full px-4 py-3 bg-surface border border-border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <label className="text-sm font-medium text-text-primary">Correo Electrónico</label>
+                    <input 
+                      type="email" 
+                      value={user?.email || ""} 
+                      disabled
+                      className="w-full px-4 py-3 bg-background border border-border rounded-xl opacity-60 cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button 
+                      type="submit" 
+                      disabled={loading}
+                      className="btn-primary flex items-center gap-2 px-6 py-3 rounded-xl font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Guardar Cambios
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Apariencia Section */}
         <section className="card p-6 bg-white dark:bg-surface shadow-sm hover:shadow-md transition-all border-border">
           <div className="flex items-center justify-between gap-4">
              <div className="flex items-center gap-4">

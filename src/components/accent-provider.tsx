@@ -28,6 +28,13 @@ const AccentContext = createContext<AccentContextType>({
 
 export const useAccent = () => useContext(AccentContext);
 
+function hexToRgb(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${r}, ${g}, ${b}`;
+}
+
 export function AccentProvider({ children }: { children: React.ReactNode }) {
   const [color, setColor] = useState(ACCENT_COLORS[0].hex);
 
@@ -35,14 +42,14 @@ export function AccentProvider({ children }: { children: React.ReactNode }) {
     const stored = localStorage.getItem("kardix-accent");
     if (stored) {
       setColor(stored);
-      document.documentElement.style.setProperty("--primary", stored);
+      document.documentElement.style.setProperty("--primary", hexToRgb(stored));
     }
   }, []);
 
   const changeColor = (newColor: string) => {
     setColor(newColor);
     localStorage.setItem("kardix-accent", newColor);
-    document.documentElement.style.setProperty("--primary", newColor);
+    document.documentElement.style.setProperty("--primary", hexToRgb(newColor));
   };
 
   return (

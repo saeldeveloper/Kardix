@@ -10,14 +10,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        surface: "var(--surface)",
-        primary: "var(--primary)",
+        background: "rgb(var(--background))",
+        surface: "rgb(var(--surface))",
+        primary: "rgb(var(--primary))",
         text: {
           primary: "var(--text-primary)",
           secondary: "var(--text-secondary)",
         },
-        border: "var(--border)",
+        border: "rgb(var(--border))",
         success: {
           bg: "var(--success-bg)",
           text: "var(--success-text)",
