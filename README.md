@@ -13,9 +13,7 @@
 </div>
 
 <div align="center">
-  <video src="https://private-user-images.githubusercontent.com/265097338/564998474-74dfd0ad-af4c-48e2-baaa-fd53e2b6c7c0.mp4" width="100%" controls>
-    Your browser does not support the video tag.
-  </video>
+  <img width="1920" height="1440" alt="Image" src="https://github.com/user-attachments/assets/4bc125f9-d3a1-433f-a489-b6d730a023d2" />
 </div>
 
 ---
